@@ -20,7 +20,7 @@ class Integer():
 
     def __str__(self):
         return f"Integer(name=\"{self.name}\", value=\"{self.value}\")"
-
+    
     def eval(self):
         return int(self.value)
 

@@ -16,7 +16,6 @@ class Parser():
 				return [program_declaration[0]]
 			
 			if len(program_declaration) == 3:
-				print(program_declaration)
 				return [program_declaration[0]] + program_declaration[2]
 			
 		@self.pg.production('type : INTEGER_DATATYPE')
@@ -57,10 +56,27 @@ class Parser():
 				datatype = variable_declaration_declaration[0]
 				identifier = variable_declaration_declaration[1].getstr()
 				datatype.set_name(identifier)
+				
+				if isinstance(datatype, (Float, Integer)):
+					datatype_name = datatype.get_type()
+				else:
+					try:
+						datatype_name = datatype.getstr()
+					except:
+						datatype_name = datatype
+
+				try:
+					identifier = variable_declaration_declaration[1].getstr()
+				except:
+					identifier = variable_declaration_declaration[1]
+
+				if len(variable_declaration_declaration) == 2:
+					parsed_line = f"{datatype_name} {identifier};"
 
 				if len(variable_declaration_declaration) == 4:
 					value = variable_declaration_declaration[3]
 					datatype.set_value(value)
+					parsed_line = f"{datatype_name} {identifier} = {value};"
 			else:
 				if isinstance(variable_declaration_declaration[0], Float) or isinstance(variable_declaration_declaration[0], Integer):
 					identifier = variable_declaration[0].getstr()
@@ -81,7 +97,15 @@ class Parser():
 				datatype = global_variables_instance.get_variable(identifier)
 				new_value = variable_declaration_declaration[2]
 				datatype.set_value(new_value)
+				
+				if isinstance(new_value, (Float, Integer)):
+					new_value_string = new_value.get_value()
+				else:
+					new_value_string = new_value
 
+				parsed_line = f"{identifier} = {new_value_string};"
+
+			global_variables_instance.set_parsed_line(parsed_line)
 			global_variables_instance.set_variable(datatype.get_name(), datatype)
 			return datatype
 		
@@ -90,7 +114,7 @@ class Parser():
 		@self.pg.production('statement : statement statement')
 		@self.pg.production('statement : print SEMICOLON')
 		def statement(statement_declaration):
-			if isinstance(statement_declaration[0], Float) or isinstance(statement_declaration[0], Integer):
+			if isinstance(statement_declaration[0], (Float, Integer)):
 				return statement_declaration[0]
 			
 			try:
@@ -144,12 +168,42 @@ class Parser():
 		@self.pg.production('params : type IDENTIFIER')
 		@self.pg.production('params : type IDENTIFIER COMMA params')
 		def params(params_declaration):
+			global_variables_instance = GlobalVariablesSingleton()
 			if len(params_declaration) == 0:
 				return []
-			elif len(params_declaration) == 1:
+
+			if len(params_declaration) == 1:
+				datatype = params_declaration[0]
+				if isinstance(datatype, (Integer, Float, Void)):
+					datatype_name = datatype.get_type()
+				else:
+					datatype_name = "unknown"
+
+				try:
+					identifier = params_declaration[1].getstr()
+				except:
+					identifier = params_declaration[1]
+
+				parsed_line = f"{datatype_name} {identifier}"
+				global_variables_instance.set_parsed_line(parsed_line)
 				return [params_declaration[0].getstr()]
 			else:
-				return [params_declaration[0].getstr()] + params_declaration[2]
+				datatype = params_declaration[0]
+				if isinstance(datatype, (Integer, Float, Void)):
+					datatype_name = datatype.get_type()
+				else:
+					datatype_name = "unknown"
+
+				try:
+					identifier = params_declaration[1].getstr()
+				except:
+					identifier = params_declaration[1]
+
+				params_list = params_declaration[3]
+				params_list_string = f"[{','.join([str(param) for param in params_list])}]"
+				parsed_line = f"{datatype_name} {identifier}, {params_list_string}"
+				global_variables_instance.set_parsed_line(parsed_line)
+				return [params_declaration[0].getstr()] + params_declaration[3]
 			
 
 		@self.pg.production('expression : expression ADD_OPERATOR expression')
@@ -157,23 +211,34 @@ class Parser():
 		@self.pg.production('expression : expression MULTIPLICATION_OPERATOR expression')
 		@self.pg.production('expression : expression DIVISION_OPERATOR expression')
 		def expression_arithmetic(expression_declaration):
+			global_variables_instance = GlobalVariablesSingleton()
 			left_operand_expression = expression_declaration[0]
 			right_operand_expression = expression_declaration[2]
 			operator = expression_declaration[1]
+			operator_symbol = operator.getstr()
 
 			if isinstance(left_operand_expression, (Integer, Float)):
+				left_variable = left_operand_expression.get_name()
 				left_operand = left_operand_expression.get_value()
 				if isinstance(left_operand, (Integer, Float)):
 					left_operand = left_operand.get_value()
 			else:
+				left_variable = left_operand_expression
 				left_operand = left_operand_expression
 
 			if isinstance(right_operand_expression, (Integer, Float)):
+				right_variable = right_operand_expression.get_name()
 				right_operand = right_operand_expression.get_value()
 				if isinstance(right_operand, (Integer, Float)):
 					right_operand = right_operand.get_value()
 			else:
+				right_variable = left_operand_expression
 				right_operand = right_operand_expression
+			
+
+			parsed_line = f"{left_variable} {operator_symbol} {right_variable}"
+			global_variables_instance.set_parsed_line(parsed_line)
+
 			if operator.gettokentype() == 'ADD_OPERATOR':
 				return Sum(left_operand, right_operand)
 			
@@ -276,15 +341,34 @@ class Parser():
 		
 		@self.pg.production('statement : IF_KEYWORD LEFT_PARENTHESIS expression RIGHT_PARENTHESIS LEFT_BRACE program RIGHT_BRACE')
 		def if_statement(if_statement_declaration):
+			global_variables_instance = GlobalVariablesSingleton()
+
 			condition = if_statement_declaration[2]
+			condition_string = str(condition)
+			left_brace = if_statement_declaration[4].getstr()
 			body = if_statement_declaration[5]
+			body_string = f"[{','.join([str(element) for element in body])}]"
+			right_brace = if_statement_declaration[6].getstr()
+
+			parsed_line = f"if({condition_string}){left_brace}{body_string}{right_brace}"
+			global_variables_instance.set_parsed_line(parsed_line)
 			return IfElseStatement(condition, body)
 		
 		@self.pg.production('statement : IF_KEYWORD LEFT_PARENTHESIS expression RIGHT_PARENTHESIS LEFT_BRACE program RIGHT_BRACE ELSE_KEYWORD LEFT_BRACE program RIGHT_BRACE')
 		def if_else_statement(if_else_statement_declaration):
+			global_variables_instance = GlobalVariablesSingleton()
+
 			condition = if_else_statement_declaration[2]
+			condition_string = str(condition)
+			left_brace = if_else_statement_declaration[4].getstr()
 			if_body = if_else_statement_declaration[5]
+			if_body_string = f"[{','.join([str(element) for element in if_body])}]"
+			right_brace = if_else_statement_declaration[6].getstr()
 			else_body = if_else_statement_declaration[9]
+			else_body_string = f"[{','.join([str(element) for element in else_body])}]"
+
+			parsed_line = f"if({condition_string}){left_brace}{if_body_string}{right_brace}else{left_brace}{else_body_string}{right_brace}"
+			global_variables_instance.set_parsed_line(parsed_line)
 			return IfElseStatement(condition, if_body, else_body)
 
 		@self.pg.production('print : PRINT_FUNCTION LEFT_PARENTHESIS STRING RIGHT_PARENTHESIS SEMICOLON')

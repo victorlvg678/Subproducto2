@@ -65,6 +65,7 @@ def lexical_analysis():
 def syntax_analysis():
 	global_variables_instance = GlobalVariablesSingleton()
 	global_variables_instance.set_variables({})
+	global_variables_instance.set_parsed_lines([])
 	if global_variables_instance.get_lexical_analysis_failed():
 		syntax_analysis_output.insert(tk.END, f'Analis lexico ha fallado. No se puede realizar analisis sintactico.\n')
 		return
@@ -87,7 +88,7 @@ def syntax_analysis():
 		parser = pg.get_parser()
 		parse_elements = parser.parse(global_variables_instance.get_final_tokens())
 		for parsed_line in global_variables_instance.get_parsed_lines():
-			syntax_analysis_output.insert(tk.END, f'({parsed_line}, VALIDO)\n')
+			syntax_analysis_output.insert(tk.END, f'(\"{parsed_line}\", VALIDO)\n')
 
 	except ParsingError as parsing_error:
 		parser_error = ParserError(f"{parsing_error.message}", parsing_error.getsourcepos())
