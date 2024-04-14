@@ -1,6 +1,6 @@
 class GlobalVariablesSingleton:
     _instance = None
-    _lexical_analysis_failed = False
+    _lexical_analysis_failed = True
     _final_tokens = []
     _final_tokens_in_spanish = []
     _variables = {}

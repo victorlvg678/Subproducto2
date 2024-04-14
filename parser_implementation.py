@@ -4,7 +4,7 @@ from global_variables import GlobalVariablesSingleton
 
 class Parser():
 	def __init__(self):
-		self.pg = ParserGenerator(['IDENTIFIER', 'INTEGER', 'FLOAT', 'STRING', 'INTEGER_DATATYPE', 'FLOAT_DATATYPE', 'VOID_DATATYPE', 'ADD_OPERATOR', 'SUBSTRACTION_OPERATOR', 'MULTIPLICATION_OPERATOR', 'DIVISION_OPERATOR', 'LESS_THAN_OPERATOR', 'LESS_THAN_OR_EQUAL_OPERATOR', 'GREATER_THAN_OPERATOR', 'GREATER_THAN_OR_EQUAL_OPERATOR', 'OR_LOGICAL_OPERATOR', 'AND_LOGICAL_OPERATOR ', 'NOT_LOGICAL_OPERATOR', 'EQUALITY_OPERATOR', 'INEQUALITY_OPERATOR', 'SEMICOLON', 'COMMA', 'LEFT_PARENTHESIS', 'RIGHT_PARENTHESIS', 'LEFT_BRACE', 'RIGHT_BRACE', 'ASSIGNMENT', 'IF_KEYWORD', 'WHILE_KEYWORD', 'RETURN_KEYWORD', 'ELSE_KEYWORD', 'NEW_LINE', 'PRINT_FUNCTION'])
+		self.pg = ParserGenerator(['IDENTIFIER', 'INTEGER', 'FLOAT', 'STRING', 'INTEGER_DATATYPE', 'FLOAT_DATATYPE', 'VOID_DATATYPE', 'ADD_OPERATOR', 'SUBSTRACTION_OPERATOR', 'MULTIPLICATION_OPERATOR', 'DIVISION_OPERATOR', 'LESS_THAN_OPERATOR', 'LESS_THAN_OR_EQUAL_OPERATOR', 'GREATER_THAN_OPERATOR', 'GREATER_THAN_OR_EQUAL_OPERATOR', 'OR_LOGICAL_OPERATOR', 'AND_LOGICAL_OPERATOR', 'NOT_LOGICAL_OPERATOR', 'EQUALITY_OPERATOR', 'INEQUALITY_OPERATOR', 'SEMICOLON', 'COMMA', 'LEFT_PARENTHESIS', 'RIGHT_PARENTHESIS', 'LEFT_BRACE', 'RIGHT_BRACE', 'ASSIGNMENT', 'IF_KEYWORD', 'WHILE_KEYWORD', 'RETURN_KEYWORD', 'ELSE_KEYWORD', 'NEW_LINE', 'PRINT_FUNCTION'])
 
 	def parse(self):
 		@self.pg.production('program : statement')
@@ -257,12 +257,16 @@ class Parser():
 		@self.pg.production('expression : expression GREATER_THAN_OR_EQUAL_OPERATOR expression')
 		@self.pg.production('expression : expression EQUALITY_OPERATOR expression')
 		@self.pg.production('expression : expression INEQUALITY_OPERATOR expression')
+		@self.pg.production('expression : expression OR_LOGICAL_OPERATOR expression')
+		@self.pg.production('expression : expression AND_LOGICAL_OPERATOR expression')
 		@self.pg.production('expression : LEFT_PARENTHESIS expression RIGHT_PARENTHESIS LESS_THAN_OPERATOR LEFT_PARENTHESIS expression RIGHT_PARENTHESIS')
 		@self.pg.production('expression : LEFT_PARENTHESIS expression RIGHT_PARENTHESIS LESS_THAN_OR_EQUAL_OPERATOR LEFT_PARENTHESIS expression RIGHT_PARENTHESIS')
 		@self.pg.production('expression : LEFT_PARENTHESIS expression RIGHT_PARENTHESIS GREATER_THAN_OPERATOR LEFT_PARENTHESIS expression RIGHT_PARENTHESIS')
 		@self.pg.production('expression : LEFT_PARENTHESIS expression RIGHT_PARENTHESIS GREATER_THAN_OR_EQUAL_OPERATOR LEFT_PARENTHESIS expression RIGHT_PARENTHESIS')
 		@self.pg.production('expression : LEFT_PARENTHESIS expression RIGHT_PARENTHESIS EQUALITY_OPERATOR LEFT_PARENTHESIS expression RIGHT_PARENTHESIS')
 		@self.pg.production('expression : LEFT_PARENTHESIS expression RIGHT_PARENTHESIS INEQUALITY_OPERATOR LEFT_PARENTHESIS expression RIGHT_PARENTHESIS')
+		@self.pg.production('expression : LEFT_PARENTHESIS expression RIGHT_PARENTHESIS OR_LOGICAL_OPERATOR LEFT_PARENTHESIS expression RIGHT_PARENTHESIS')
+		@self.pg.production('expression : LEFT_PARENTHESIS expression RIGHT_PARENTHESIS AND_LOGICAL_OPERATOR LEFT_PARENTHESIS expression RIGHT_PARENTHESIS')
 		def expression_logical_operators(expression_declaration):
 			if len(expression_declaration) == 3:
 				left_operand_expression = expression_declaration[0]
@@ -304,6 +308,13 @@ class Parser():
 			
 			if logical_operator.gettokentype() == 'INEQUALITY_OPERATOR':
 				return Inequality(left_operand, right_operand)
+			
+			if logical_operator.gettokentype() == 'OR_LOGICAL_OPERATOR':
+				return OrLogical(left_operand, right_operand)
+			
+			if logical_operator.gettokentype() == 'AND_LOGICAL_OPERATOR':
+				return AndLogical(left_operand, right_operand)
+			
 			
 
 		@self.pg.production('expression : INTEGER')

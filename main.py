@@ -15,7 +15,7 @@ def lexical_analysis():
 	text_input = lexical_analysis_input.get("1.0", tk.END)
 	prev_token = None
 	pending_tokens = True
-	lexical_analysis_failed = False
+	lexical_analysis_failed = True
 	final_tokens = []
 	final_tokens_in_spanish = []
 	global_variables_instance = GlobalVariablesSingleton()
@@ -44,6 +44,7 @@ def lexical_analysis():
 				global_variables_instance.set_final_tokens_in_spanish(final_tokens_in_spanish)
 
 			pending_tokens = False
+			lexical_analysis_failed = False
 
 		except LexingError as token_error:
 			lexical_analysis_failed = True
@@ -62,10 +63,11 @@ def lexical_analysis():
 			text_input = "\n".join(lines)
 			tokens = lexer.lex(text_input)
 
+	global_variables_instance.set_lexical_analysis_failed(lexical_analysis_failed)
+
 def syntax_analysis():
+	clear_syntax_analysis()
 	global_variables_instance = GlobalVariablesSingleton()
-	global_variables_instance.set_variables({})
-	global_variables_instance.set_parsed_lines([])
 	if global_variables_instance.get_lexical_analysis_failed():
 		syntax_analysis_output.insert(tk.END, f'Analis lexico ha fallado. No se puede realizar analisis sintactico.\n')
 		return
@@ -107,17 +109,21 @@ def load_file():
 		lexical_analysis_input.delete("1.0", tk.END)
 		lexical_analysis_input.insert(tk.END, content)
 
+	clear_syntax_analysis()
+	clear_lexical_analysis()
+
 def clear_lexical_analysis():
-	global final_tokens_in_spanish
-	global lexical_analysis_failed
+	global_variables_instance = GlobalVariablesSingleton()
 	lexical_analysis_output.delete("1.0", tk.END)
-	final_tokens_in_spanish = []
-	lexical_analysis_failed = False
+	global_variables_instance.set_final_tokens_in_spanish([])
+	global_variables_instance.set_lexical_analysis_failed(True)
 
 def clear_syntax_analysis():
-	global final_tokens
+	global_variables_instance = GlobalVariablesSingleton()
 	syntax_analysis_output.delete("1.0", tk.END)
-	final_tokens = []
+	global_variables_instance.set_final_tokens([])
+	global_variables_instance.set_parsed_lines([])
+	global_variables_instance.set_variables({})
 
 
 window = tk.Tk()

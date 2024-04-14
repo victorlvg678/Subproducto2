@@ -187,6 +187,26 @@ class Inequality(BinaryOperation):
     def eval(self):
         return self.left_operand.eval() != self.right_operand.eval()
 
+class AndLogical(BinaryOperation):
+    def __init__(self, left_operand, right_operand):
+        super().__init__(left_operand, right_operand)
+
+    def __str__(self):
+        return f"AndLogical(left_operand=\"{self.left_operand}\", right_operand=\"{self.right_operand}\")"
+
+    def eval(self):
+        return self.left_operand.eval() and self.right_operand.eval()
+    
+class OrLogical(BinaryOperation):
+    def __init__(self, left_operand, right_operand):
+        super().__init__(left_operand, right_operand)
+
+    def __str__(self):
+        return f"OrLogical(left_operand=\"{self.left_operand}\", right_operand=\"{self.right_operand}\")"
+
+    def eval(self):
+        return self.left_operand.eval() or self.right_operand.eval()
+
 
 class FunctionDefinition:
     def __init__(self, name, params, body):
